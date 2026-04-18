@@ -1,0 +1,82 @@
+[
+    {
+        "id": 1,
+        "name": "iPhone 15 Pro",
+        "subtitle": "Titanium Black",
+        "price": 799,
+        "oldPrice": 899,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg",
+        "isFavorite": false
+    },
+    {
+        "id": 2,
+        "name": "Samsung Galaxy S24 Ultra",
+        "subtitle": "Titanium Gray",
+        "price": 949,
+        "oldPrice": 1049,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/samsung-galaxy-s24-ultra-5g-sm-s928.jpg",
+        "isFavorite": true
+    },
+    {
+        "id": 3,
+        "name": "Google Pixel 8 Pro",
+        "subtitle": "Obsidian",
+        "price": 699,
+        "oldPrice": 799,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro.jpg",
+        "isFavorite": false
+    },
+    {
+        "id": 4,
+        "name": "OnePlus 12",
+        "subtitle": "Flowy Emerald",
+        "price": 749,
+        "oldPrice": 849,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/oneplus-12.jpg",
+        "isFavorite": false
+    },
+    {
+        "id": 5,
+        "name": "Xiaomi 14 Ultra",
+        "subtitle": "White",
+        "price": 899,
+        "oldPrice": 999,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/google-pixel-8-pro.jpg",
+        "isFavorite": true
+    },
+    {
+        "id": 6,
+        "name": "Sony Xperia 1 V",
+        "subtitle": "Black",
+        "price": 879,
+        "oldPrice": 979,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/sony-xperia-1-v.jpg",
+        "isFavorite": false
+    },
+    {
+        "id": 7,
+        "name": "Nothing Phone 2",
+        "subtitle": "White",
+        "price": 599,
+        "oldPrice": 699,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/nothing-phone2.jpg",
+        "isFavorite": false
+    },
+    {
+        "id": 8,
+        "name": "Motorola Edge 50 Pro",
+        "subtitle": "Black Beauty",
+        "price": 649,
+        "oldPrice": 749,
+        "currency": "EUR",
+        "image": "https://fdn2.gsmarena.com/vv/bigpic/motorola-edge-50-pro.jpg",
+        "isFavorite": true
+    }
+]
