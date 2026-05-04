@@ -1,24 +1,24 @@
 'use client';
-
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useSignUpMutation } from '@/features/auth/authApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import * as z from 'zod';
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, 'Name must be at least 2 characters'),
+  userName: z.string().min(2, 'Username must be at least 2 characters'),
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Please confirm your password'),
-  remember: z.boolean().optional(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"],
@@ -30,6 +30,8 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [signUp, { isLoading }] = useSignUpMutation();
+  const router = useRouter();
 
   const {
     register,
@@ -38,21 +40,34 @@ export default function RegisterPage() {
   } = useForm<RegisterFormValues>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      fullName: '',
+      userName: '',
       email: '',
       password: '',
       confirmPassword: '',
-      remember: false,
     },
   });
 
-  const onSubmit = (data: RegisterFormValues) => {
-    console.log('Register Data:', data);
-    setIsSuccess(true);
+  const onSubmit = async (data: RegisterFormValues) => {
+    try {
+      const payload = {
+        userName: data.userName,
+        email: data.email,
+        password: data.password,
+        role: "USER"
+      };
+      const res = await signUp(payload).unwrap();
+      toast.success(res.message);
+      setIsSuccess(true);
+      setTimeout(() => {
+        router.push(`/verify-otp?email=${encodeURIComponent(data.email)}`);
+      }, 2000);
+    } catch (error: any) {
+      toast.error(error.data?.message || 'Something went wrong');
+    }
   };
 
   return (
-    <div className="h-screen w-full flex items-center justify-center bg-[#D1D5DB]/30 backdrop-blur-3xl">
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#D1D5DB]/30 backdrop-blur-3xl p-4">
       <div className="absolute inset-0 z-[-1] bg-gradient-to-br from-[#E5E7EB] via-[#F3F4F6] to-[#D1D5DB] opacity-50" />
 
       <motion.div
@@ -72,7 +87,7 @@ export default function RegisterPage() {
               {/* Header */}
               <div className="flex flex-col items-center text-center">
                 <div className="w-25 h-25">
-                  <Image src="/icons/Logo.png" alt="Logo" width={1000} height={1000} className="object-contain w-full h-full" />
+                  <Image src="/icons/Logo.png" alt="Logo" width={100} height={100} className="object-contain w-full h-full" />
                 </div>
                 <h1 className="text-3xl font-medium text-gray-900 mb-2">Create Your Account</h1>
                 <p className="text-gray-500 text-sm font-normal">Create Account to manage your hub and services.</p>
@@ -81,14 +96,14 @@ export default function RegisterPage() {
               {/* Form */}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-2">
-                  <Label className="text-sm font-medium text-gray-700 ml-1">Full Name</Label>
+                  <Label className="text-sm font-medium text-gray-700 ml-1">Username</Label>
                   <Input
-                    {...register('fullName')}
-                    placeholder="Enter your full name here..."
-                    className={`h-12 bg-gray-200/50 border-none rounded-sm px-5 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all ${errors.fullName ? 'ring-2 ring-red-500/20 bg-red-50/30' : ''}`}
+                    {...register('userName')}
+                    placeholder="Enter your username here..."
+                    className={`h-12 bg-gray-200/50 border-none rounded-sm px-5 text-gray-900 placeholder:text-gray-400 focus-visible:ring-2 focus-visible:ring-primary/20 transition-all ${errors.userName ? 'ring-2 ring-red-500/20 bg-red-50/30' : ''}`}
                   />
-                  {errors.fullName && (
-                    <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.fullName.message}</p>
+                  {errors.userName && (
+                    <p className="text-red-500 text-xs font-medium mt-1 ml-1">{errors.userName.message}</p>
                   )}
                 </div>
 
@@ -148,22 +163,13 @@ export default function RegisterPage() {
                   )}
                 </div>
 
-                <div className="flex items-center space-x-3 ml-1">
-                  <Checkbox
-                    id="remember"
-                    {...register('remember')}
-                    className="h-5 w-5 rounded-md border-gray-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <Label htmlFor="remember" className="text-sm font-medium text-gray-600 cursor-pointer">Remember Me</Label>
-                </div>
-
-                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/80 text-white font-bold rounded-sm text-lg shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer">
-                  Create Account
+                <Button type="submit" disabled={isLoading} className="w-full h-12 bg-primary hover:bg-primary/80 text-white font-bold rounded-sm text-lg shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer">
+                  {isLoading ? 'Creating Account...' : 'Create Account'}
                 </Button>
               </form>
 
               {/* Footer Link */}
-              <p className="text-center text-gray-600 font-medium">
+              <p className="text-center text-gray-600 font-medium pb-4">
                 Already have an account? <Link href="/login" className="text-primary font-bold hover:underline">Login</Link>
               </p>
             </motion.div>
@@ -179,13 +185,16 @@ export default function RegisterPage() {
               </div>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">Account Created!</h2>
               <p className="text-gray-500 max-w-xs mx-auto mb-10 text-lg">
-                Your account has been successfully created. You can now log in.
+                Your account has been successfully created. Redirecting to verify your email...
               </p>
-              <Link href="/login" className="w-full">
-                <Button className="w-full h-14 bg-[#6366F1] hover:bg-[#5558E3] text-white font-bold rounded-xl text-lg transition-all cursor-pointer">
-                  Back to Login
-                </Button>
-              </Link>
+              <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: '100%' }}
+                  transition={{ duration: 2 }}
+                  className="h-full bg-green-500"
+                />
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

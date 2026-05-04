@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import ClientLayout from "@/components/shared/ClientLayout";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -8,12 +9,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Orienco Rapid Delivery",
-  description: "Orienco Rapid Delivery - Fast and reliable delivery services",
+  title: "Alexandertel Website",
+  description: "Experience modern web design with Alexandertel.",
 };
-
-import SmoothScroll from "@/components/shared/SmoothScroll";
-import Cursor from "@/components/shared/Cursor";
 
 export default function RootLayout({
   children,
@@ -26,10 +24,9 @@ export default function RootLayout({
       className={`${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-white text-black selection:bg-primary selection:text-white">
-        <SmoothScroll>
-          <Cursor />
+        <ClientLayout>
           {children}
-        </SmoothScroll>
+        </ClientLayout>
       </body>
     </html>
   );

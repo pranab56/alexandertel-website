@@ -1,9 +1,11 @@
 'use client';
 
+import { setAuthCookie } from '@/app/actions/auth';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useLoginMutation } from '@/features/auth/authApi';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, EyeOff, CheckCircle2 } from 'lucide-react';
@@ -11,12 +13,12 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import toast from 'react-hot-toast';
 import * as z from 'zod';
 
 const loginSchema = z.object({
   email: z.string().min(1, 'Email is required').email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  remember: z.boolean().optional(),
 });
 
 type LoginFormValues = z.infer<typeof loginSchema>;
@@ -24,6 +26,7 @@ type LoginFormValues = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [login, { isLoading }] = useLoginMutation();
 
   const {
     register,
@@ -34,13 +37,19 @@ export default function LoginPage() {
     defaultValues: {
       email: '',
       password: '',
-      remember: false,
     },
   });
 
-  const onSubmit = (data: LoginFormValues) => {
+  const onSubmit = async (data: LoginFormValues) => {
     console.log('Login Data:', data);
-    setIsSuccess(true);
+    try {
+      const res = await login(data).unwrap();
+      toast.success(res.message);
+      await setAuthCookie(res.data.accessToken);
+      setIsSuccess(true);
+    } catch (error: any) {
+      toast.error(error.data.message);
+    }
   };
 
   return (
@@ -111,16 +120,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <div className="flex items-center space-x-3 ml-1">
-                  <Checkbox
-                    id="remember"
-                    {...register('remember')}
-                    className="h-5 w-5 rounded-md border-gray-300 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
-                  />
-                  <Label htmlFor="remember" className="text-sm font-medium text-gray-600 cursor-pointer">Remember Me</Label>
-                </div>
-
-                <Button type="submit" className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-sm text-lg shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer">
+                <Button type="submit" disabled={isLoading} className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-medium rounded-sm text-lg shadow-lg shadow-indigo-500/20 active:scale-[0.98] transition-all cursor-pointer">
                   Login
                 </Button>
               </form>
@@ -169,7 +169,7 @@ export default function LoginPage() {
               </p>
               <Link href="/" className="w-full">
                 <Button className="w-full h-14 bg-[#6366F1] hover:bg-[#5558E3] text-white font-bold rounded-xl text-lg transition-all cursor-pointer">
-                  Go to Dashboard
+                  Go to Website
                 </Button>
               </Link>
             </motion.div>
