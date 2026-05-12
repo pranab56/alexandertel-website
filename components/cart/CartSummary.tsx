@@ -46,9 +46,9 @@ export function CartSummary({ subtotal, shipping, total }: CartSummaryProps) {
                 </div>
             </div>
 
-            <Link href="/checkout" className="block w-full">
+            <Link href="/shipping" className="block w-full">
                 <Button className="w-full h-14 bg-primary hover:bg-primary/90 text-white rounded-lg font-medium text-lg shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] cursor-pointer">
-                    Continue to Payment
+                    Continue to Shipping
                 </Button>
             </Link>
         </div>

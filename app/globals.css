@@ -290,3 +290,22 @@ body {
     @apply font-sans;
   }
 }
+.custom-scrollbar {
+  scrollbar-width: thin !important;
+  scrollbar-color: var(--primary) transparent !important;
+  -ms-overflow-style: auto !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  display: block !important;
+  width: 6px !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent !important;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--primary) !important;
+  border-radius: 10px !important;
+}

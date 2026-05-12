@@ -1,31 +1,41 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { Plus, Heart, ChevronRight } from "lucide-react";
+import { Plus, Heart, ChevronRight, Loader2, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useGetAllProductQuery } from "@/features/shop/shopApi";
+import { useAddToCardMutation, useMyAllProductQuery } from "@/features/shop/cartApi";
+import { useAddFavoriteProductMutation, useDeleteFavoriteProductMutation, useMyAllFavoriteProductQuery } from "@/features/shop/favoriteProductApi";
+import { imageBaseURL } from "@/utils/BaseURL";
+import toast from "react-hot-toast";
+
 
 interface Product {
-    id: number;
+    _id: string;
     name: string;
-    subtitle: string;
-    price: number;
-    oldPrice: number;
-    currency: string;
-    image: string;
-    isFavorite: boolean;
+    description: string;
+    basePrice: number;
+    image: string | null;
+    stockStatus: string;
+    color: { type: string; price: number }[];
+    storage: { type: string; price: number }[];
+    ram: any[];
 }
 
 export default function FeaturedGadgets() {
-    const [products, setProducts] = useState<Product[]>([]);
+    const { data, isLoading } = useGetAllProductQuery({});
+    const products = data?.data || [];
 
-    useEffect(() => {
-        fetch("/product.json")
-            .then((res) => res.json())
-            .then((data) => setProducts(data));
-    }, []);
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-20">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     return (
         <section className="container mx-auto px-6 py-16">
@@ -47,8 +57,8 @@ export default function FeaturedGadgets() {
 
             {/* Grid Section */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-                {products.map((product, index) => (
-                    <ProductCard key={product.id} product={product} index={index} />
+                {products.slice(0, 6).map((product: Product, index: number) => (
+                    <ProductCard key={product._id} product={product} index={index} />
                 ))}
             </div>
         </section>
@@ -56,6 +66,47 @@ export default function FeaturedGadgets() {
 }
 
 export function ProductCard({ product, index }: { product: Product; index: number }) {
+    const [addToCart, { isLoading: isAddingToCart }] = useAddToCardMutation();
+    const [addFavorite] = useAddFavoriteProductMutation();
+    const { data: favoriteData } = useMyAllFavoriteProductQuery(undefined);
+    const { data: cartData } = useMyAllProductQuery(undefined);
+
+    const isFavorite = favoriteData?.data?.some((item: any) => item.productId === product._id);
+    const isInCart = cartData?.data?.items?.some((item: any) => item.product?._id === product._id);
+
+
+    const handleAddToCart = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+            const data = {
+                productId: product._id,
+                quantity: 1,
+                // Taking defaults if available
+                color: product.color?.[0]?.type || "",
+                storage: product.storage?.[0]?.type || "",
+            };
+            await addToCart(data).unwrap();
+            toast.success("Added to cart");
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Failed to add to cart");
+        }
+    };
+
+    const handleFavorite = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        try {
+
+            const response = await addFavorite(product._id).unwrap();
+            console.log(response);
+            toast.success(response?.message)
+
+        } catch (error: any) {
+            toast.error(error?.data?.message || "Action failed");
+        }
+    };
+
     return (
         <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -63,56 +114,62 @@ export function ProductCard({ product, index }: { product: Product; index: numbe
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
             data-cursor="view"
-            className="group bg-[#f7f7f7] rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-sm transition-all duration-500 relative"
+            className="group bg-[#f7f7f7] rounded-xl overflow-hidden cursor-pointer shadow-sm hover:shadow-md transition-all duration-500 relative"
         >
-            <Link href={`/shop/${product.id}`} className="block">
+            <Link href={`/shop/${product._id}`} className="block">
                 {/* Image Container */}
                 <div className="relative aspect-square w-full flex items-center justify-center p-8 bg-[#E5E7EB]/50">
                     <Image
-                        src={product.image}
+                        src={product.image ? (product.image.startsWith('http') ? product.image : `${imageBaseURL}${product.image}`) : "/placeholder-product.png"}
                         alt={product.name}
-                        width={1000}
-                        height={1000}
+                        width={400}
+                        height={400}
                         className="object-contain mix-blend-multiply h-50 w-full group-hover:scale-110 transition-transform duration-500"
                     />
                 </div>
 
                 {/* Info Section */}
                 <div className="p-6 bg-white">
-                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors">
+                    <h3 className="font-bold text-lg text-gray-900 group-hover:text-primary transition-colors line-clamp-1">
                         {product.name}
                     </h3>
-                    <p className="text-gray-400 text-sm mb-4">{product.subtitle}</p>
+                    <p className="text-gray-400 text-sm mb-4 line-clamp-2 min-h-[40px]">{product.description}</p>
 
                     <div className="flex items-center gap-3">
                         <span className="text-2xl font-bold text-primary">
-                            €{product.price}
+                            €{product.basePrice}
                         </span>
-                        {product.oldPrice && (
-                            <span className="text-gray-400 line-through text-sm">
-                                €{product.oldPrice}
-                            </span>
-                        )}
+                        {/* You can add old price if available in your API response */}
                     </div>
                 </div>
             </Link>
 
             {/* Floating Icons - Placed outside the main Link for independent interaction */}
-            <div className="absolute top-4 right-4 flex flex-col gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
-                <button 
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                    className="w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center text-gray-600 hover:bg-primary hover:text-white transition-colors"
-                >
-                    <Plus size={20} />
-                </button>
-                <button 
-                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+            <div className="absolute top-4 right-4 flex flex-col gap-2 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-300 z-10">
+                <button
+                    onClick={handleAddToCart}
+                    disabled={isAddingToCart}
                     className={cn(
-                        "w-10 h-10 rounded-full bg-white shadow-md flex items-center justify-center transition-colors",
-                        product.isFavorite ? "text-red-500" : "text-gray-600 hover:text-red-500"
+                        "w-10 h-10 rounded-full cursor-pointer shadow-md flex items-center justify-center transition-all duration-300",
+                        isInCart ? "bg-primary text-white" : "bg-white text-gray-600 hover:bg-primary hover:text-white"
                     )}
                 >
-                    <Heart size={20} fill={product.isFavorite ? "currentColor" : "none"} />
+                    {isAddingToCart ? (
+                        <Loader2 size={20} className="animate-spin" />
+                    ) : isInCart ? (
+                        <Check size={20} />
+                    ) : (
+                        <Plus size={20} />
+                    )}
+                </button>
+                <button
+                    onClick={handleFavorite}
+                    className={cn(
+                        "w-10 h-10 rounded-full cursor-pointer bg-white shadow-md flex items-center justify-center transition-colors",
+                        isFavorite ? "text-red-500" : "text-gray-600 hover:text-red-500"
+                    )}
+                >
+                    <Heart size={20} fill={isFavorite ? "currentColor" : "none"} />
                 </button>
             </div>
         </motion.div>

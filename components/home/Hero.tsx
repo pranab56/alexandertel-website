@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function Hero() {
     return (
@@ -74,19 +75,23 @@ export default function Hero() {
                             transition={{ duration: 0.8, delay: 0.6 }}
                             className="flex flex-wrap gap-4 pt-4"
                         >
-                            <Button
-                                size="lg"
-                                className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-8 h-14 text-base font-semibold transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(108,99,255,0.4)]"
-                            >
-                                Shop Now
-                            </Button>
-                            <Button
-                                variant="outline"
-                                size="lg"
-                                className="bg-white hover:bg-white border-white/20 cursor-pointer text-primary hover:text-primary/90 rounded-sm px-8 h-14 text-base font-semibold backdrop-blur-md transition-all hover:scale-105 active:scale-95"
-                            >
-                                Book Repair
-                            </Button>
+                            <Link href={"/shop"}>
+                                <Button
+                                    size="lg"
+                                    className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-8 h-14 text-base font-semibold transition-all hover:scale-105 active:scale-95 shadow-[0_0_20px_rgba(108,99,255,0.4)]"
+                                >
+                                    Shop Now
+                                </Button>
+                            </Link>
+                            <Link href={"/repair"}>
+                                <Button
+                                    variant="outline"
+                                    size="lg"
+                                    className="bg-white hover:bg-white border-white/20 cursor-pointer text-primary hover:text-primary/90 rounded-sm px-8 h-14 text-base font-semibold backdrop-blur-md transition-all hover:scale-105 active:scale-95"
+                                >
+                                    Book Repair
+                                </Button>
+                            </Link>
                         </motion.div>
                     </div>
 

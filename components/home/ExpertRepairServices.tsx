@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 const features = [
     "Free diagnostics on all devices",
@@ -57,19 +58,21 @@ export default function ExpertRepairServices() {
                             ))}
                         </ul>
 
-                        <motion.div
-                            initial={{ opacity: 0, y: 20 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.5, delay: 0.5 }}
-                        >
-                            <Button
-                                size="lg"
-                                className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-10 h-14 text-base font-bold transition-transform hover:scale-105 shadow-lg shadow-primary/20"
+                        <Link href={"/repair"}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                viewport={{ once: true }}
+                                transition={{ duration: 0.5, delay: 0.5 }}
                             >
-                                Start Repair
-                            </Button>
-                        </motion.div>
+                                <Button
+                                    size="lg"
+                                    className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-10 h-14 text-base font-bold transition-transform hover:scale-105 shadow-lg shadow-primary/20"
+                                >
+                                    Start Repair
+                                </Button>
+                            </motion.div>
+                        </Link>
                     </div>
 
                     {/* Right Side: Image */}

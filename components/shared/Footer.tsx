@@ -6,8 +6,29 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Image from "next/image";
+import toast from "react-hot-toast";
 
 export default function Footer() {
+  const [email, setEmail] = React.useState("");
+  const [error, setError] = React.useState("");
+
+  const handleSubscribe = () => {
+    if (!email) {
+      setError("Email address is required");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+
+    setError("");
+    toast.success("Thank you for subscribing!");
+    setEmail("");
+  };
+
   return (
     <footer className="w-full bg-[#f2f2f2]">
       <motion.div
@@ -58,14 +79,22 @@ export default function Footer() {
             <p className="text-white/50">
               Subscribe to our newsletter and be the first to know about exclusive offers and promotions
             </p>
-            <div className="flex flex-col sm:flex-row gap-3">
-              <Input
-                placeholder="Typing your email address here..."
-                className="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-12 rounded-sm focus:ring-primary focus:border-primary"
-              />
-              <Button className="bg-primary hover:bg-primary/90 text-white h-12 px-8 rounded-sm shrink-0 font-medium">
-                Subscribe
-              </Button>
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
+                <Input
+                  value={email}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    if (error) setError("");
+                  }}
+                  placeholder="Typing your email address here..."
+                  className="bg-white/10 border-white/10 text-white placeholder:text-white/30 h-12 rounded-sm focus:ring-primary focus:border-primary"
+                />
+                <Button onClick={handleSubscribe} className="bg-primary cursor-pointer hover:bg-primary/90 text-white h-12 px-8 rounded-sm shrink-0 font-medium">
+                  Subscribe
+                </Button>
+              </div>
+              {error && <p className="text-red-500 text-xs font-medium ml-1 animate-in fade-in slide-in-from-top-1">{error}</p>}
             </div>
           </div>
         </div>

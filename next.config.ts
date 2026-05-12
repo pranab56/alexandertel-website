@@ -25,6 +25,14 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 't3.ftcdn.net',
       },
+      {
+        protocol: 'http',
+        hostname: '10.10.7.55',
+      },
+      {
+        protocol: 'https',
+        hostname: 'hz2w208g-5006.inc1.devtunnels.ms',
+      },
     ],
   },
 };

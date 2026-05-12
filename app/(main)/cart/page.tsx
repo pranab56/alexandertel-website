@@ -1,51 +1,51 @@
 "use client";
 
-import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-
 import { CartItem } from "@/components/cart/CartItem";
 import { CartSummary } from "@/components/cart/CartSummary";
-
-interface CartItemData {
-    id: number;
-    name: string;
-    subtitle: string;
-    price: number;
-    image: string;
-    quantity: number;
-}
-
-const initialCart: CartItemData[] = [
-    {
-        id: 1,
-        name: "iPhone 15 Pro",
-        subtitle: "128GB, Natural Titanium",
-        price: 989,
-        image: "https://fdn2.gsmarena.com/vv/bigpic/apple-iphone-15-pro.jpg",
-        quantity: 1
-    }
-];
+import { useDeleteCartItemMutation, useMyAllProductQuery, useUpdateQuantityMutation } from "@/features/shop/cartApi";
+import toast from "react-hot-toast";
+import TopLoader from "@/components/ui/TopLoader";
 
 export default function CartPage() {
-    const [cart, setCart] = useState<CartItemData[]>(initialCart);
-
-    const updateQuantity = (id: number, delta: number) => {
-        setCart(prev => prev.map(item => 
-            item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item
-        ));
-    };
-
-    const removeItem = (id: number) => {
-        setCart(prev => prev.filter(item => item.id !== id));
-    };
-
-    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const shipping = cart.length > 0 ? 10 : 0;
+    const { data: allProduct, isLoading: allProductLoading } = useMyAllProductQuery({});
+    const [deleteProduct] = useDeleteCartItemMutation();
+    const [updateQuantityMutation] = useUpdateQuantityMutation();
+    const items = allProduct?.data?.items || [];
+    const subtotal = allProduct?.data?.totalPrice || 0;
+    const shipping = items.length > 0 ? 10 : 0;
     const total = subtotal + shipping;
+
+    const handleUpdateQuantity = async (id: string, type: "inc" | "dec") => {
+        try {
+            await updateQuantityMutation({ id, data: { type } }).unwrap();
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to update quantity");
+        }
+    };
+
+    const handleRemoveItem = async (id: string) => {
+        try {
+            const response = await deleteProduct({ id }).unwrap();
+            if (response.success) {
+                toast.success(response.message || "Item removed from cart");
+            }
+        } catch (err: any) {
+            toast.error(err?.data?.message || "Failed to remove item");
+        }
+    };
+
+    if (allProductLoading) {
+        return (
+            <div>
+                <TopLoader />
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-[#F9FAFB] pb-24">
@@ -61,7 +61,7 @@ export default function CartPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-900/60 to-transparent z-10" />
                 </div>
-                
+
                 <div className="container mx-auto px-6 relative z-20">
                     <div className="flex flex-col gap-3 text-white">
                         <div className="flex items-center gap-2 text-sm text-white/70">
@@ -79,21 +79,21 @@ export default function CartPage() {
 
             <div className="container mx-auto px-6">
                 <div className="flex flex-col lg:flex-row gap-10 items-start">
-                    
+
                     {/* Cart Items List */}
                     <div className="flex-1 w-full space-y-6">
                         <AnimatePresence mode="popLayout">
-                            {cart.length > 0 ? (
-                                cart.map((item) => (
-                                    <CartItem 
-                                        key={item.id} 
-                                        item={item} 
-                                        onUpdateQuantity={updateQuantity} 
-                                        onRemove={removeItem} 
+                            {items.length > 0 ? (
+                                items.map((item: any) => (
+                                    <CartItem
+                                        key={item._id}
+                                        item={item}
+                                        onUpdateQuantity={handleUpdateQuantity}
+                                        onRemove={handleRemoveItem}
                                     />
                                 ))
                             ) : (
-                                <motion.div 
+                                <motion.div
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: 1 }}
                                     className="text-center py-24 bg-white rounded-lg border border-gray-100 shadow-sm"
@@ -111,10 +111,10 @@ export default function CartPage() {
                     </div>
 
                     {/* Order Summary */}
-                    <CartSummary 
-                        subtotal={subtotal} 
-                        shipping={shipping} 
-                        total={total} 
+                    <CartSummary
+                        subtotal={subtotal}
+                        shipping={shipping}
+                        total={total}
                     />
 
                 </div>

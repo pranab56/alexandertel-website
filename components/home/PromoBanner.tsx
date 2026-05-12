@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function PromoBanner() {
   return (
@@ -61,20 +62,22 @@ export default function PromoBanner() {
               Experience next-level audio clarity
             </motion.p>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.5 }}
-              className="pt-4"
-            >
-              <Button
-                size="lg"
-                className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-10 h-12 text-sm font-bold transition-transform hover:scale-105"
+            <Link href={"/shop"}>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.5 }}
+                className="pt-4"
               >
-                Shop Now
-              </Button>
-            </motion.div>
+                <Button
+                  size="lg"
+                  className="bg-primary hover:bg-primary/90 text-white rounded-sm cursor-pointer px-10 h-12 text-sm font-bold transition-transform hover:scale-105"
+                >
+                  Shop Now
+                </Button>
+              </motion.div>
+            </Link>
           </div>
         </div>
       </motion.div>

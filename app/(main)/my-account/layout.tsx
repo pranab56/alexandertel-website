@@ -12,6 +12,8 @@ import {
     LogOut
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useGetProfileQuery } from "@/features/profile/profileApi";
+import { imageBaseURL } from "@/utils/BaseURL";
 
 const menuItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard, href: "/my-account" },
@@ -22,6 +24,7 @@ const menuItems = [
 
 export default function MyAccountLayout({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
+    const { data: profile } = useGetProfileQuery({});
 
     return (
         <div className="min-h-screen bg-[#F3F4F6] pb-24">
@@ -42,7 +45,7 @@ export default function MyAccountLayout({ children }: { children: React.ReactNod
                     <div className="flex flex-col gap-2">
                         <h1 className="text-5xl font-extrabold tracking-tight">My Account</h1>
                         <p className="text-xl text-white/70">
-                            Welcome back, John!
+                            Welcome back, {profile?.data?.userName?.split(' ')[0] || "User"}!
                         </p>
                     </div>
                 </div>
@@ -55,11 +58,11 @@ export default function MyAccountLayout({ children }: { children: React.ReactNod
                     <div className="w-full lg:w-[320px] shrink-0">
                         <div className="bg-white rounded-xl p-4 border border-gray-100 flex flex-col items-center text-center">
                             {/* Avatar */}
-                            <div className="w-24 h-24 rounded-full bg-blue-500 flex items-center justify-center text-white text-3xl font-bold mb-6 shadow-lg shadow-blue-500/30">
-                                JD
+                            <div className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold mb-6">
+                                <Image src={imageBaseURL + profile?.data?.profile} alt="Profile" width={1000} height={1000} className="w-full h-full rounded-full" />
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900">John Doe</h3>
-                            <p className="text-gray-400 text-sm font-medium mb-10">john@example.com</p>
+                            <h3 className="text-xl font-bold text-gray-900">{profile?.data?.userName}</h3>
+                            <p className="text-gray-400 text-sm font-medium mb-10">{profile?.data?.email}</p>
 
                             {/* Navigation Menu */}
                             <div className="w-full space-y-2">

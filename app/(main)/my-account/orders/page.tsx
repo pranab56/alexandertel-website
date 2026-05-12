@@ -12,7 +12,7 @@ import {
   Calendar as CalendarIcon
 } from 'lucide-react';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -24,63 +24,12 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { useGetAllMyProductQuery } from '@/features/repair/repairApi';
+import { imageBaseURL } from '@/utils/BaseURL';
+import { Loader2 } from 'lucide-react';
 
-const orders = [
-  {
-    id: 'ORD-8241',
-    date: 'Oct 12, 2023',
-    status: 'Delivered',
-    total: 259.99,
-    subtotal: 240.00,
-    shipping: 19.99,
-    paymentMethod: 'Visa ending in 4242',
-    address: '123 Tech Lane, Silicon Valley, CA 94025',
-    items: [
-      { name: 'iPhone 15 Pro Silicone Case', image: 'https://images.unsplash.com/photo-1603919013050-6e4697397759?q=80&w=200&auto=format&fit=crop', price: 49.99, qty: 1 },
-      { name: 'Apple 20W USB-C Adapter', image: 'https://images.unsplash.com/photo-1615526675159-e248c3021d3f?q=80&w=200&auto=format&fit=crop', price: 19.00, qty: 2 },
-    ]
-  },
-  {
-    id: 'ORD-7592',
-    date: 'Oct 15, 2023',
-    status: 'Processing',
-    total: 1249.00,
-    subtotal: 1249.00,
-    shipping: 0.00,
-    paymentMethod: 'Apple Pay',
-    address: '456 Innovation Dr, Austin, TX 78701',
-    items: [
-      { name: 'MacBook Air M2', image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?q=80&w=200&auto=format&fit=crop', price: 1249.00, qty: 1 },
-    ]
-  },
-  {
-    id: 'ORD-6210',
-    date: 'Aug 24, 2023',
-    status: 'Shipped',
-    total: 89.50,
-    subtotal: 79.50,
-    shipping: 10.00,
-    paymentMethod: 'Mastercard ending in 8899',
-    address: '789 Creative Park, New York, NY 10001',
-    items: [
-      { name: 'MagSafe Charger', image: 'https://images.unsplash.com/photo-1616348436168-de43ad0db179?q=80&w=200&auto=format&fit=crop', price: 39.00, qty: 1 },
-      { name: 'USB-C to Lightning Cable', image: 'https://images.unsplash.com/photo-1541140532154-b024fd2197de?q=80&w=200&auto=format&fit=crop', price: 29.00, qty: 1 },
-    ]
-  },
-  {
-    id: 'ORD-5103',
-    date: 'Jul 10, 2023',
-    status: 'Cancelled',
-    total: 199.00,
-    subtotal: 199.00,
-    shipping: 0.00,
-    paymentMethod: 'PayPal',
-    address: '321 Startup Rd, Seattle, WA 98101',
-    items: [
-      { name: 'AirPods (3rd gen)', image: 'https://images.unsplash.com/photo-1588423770574-91021160dfaa?q=80&w=200&auto=format&fit=crop', price: 199.00, qty: 1 },
-    ]
-  }
-];
+// Demo data removed
+const orders: any[] = [];
 
 const statusStyles = {
   Delivered: 'bg-green-50 text-green-600 border-green-100',
@@ -98,14 +47,49 @@ const statusIcons = {
 
 export default function MyOrdersPage() {
   const [activeTab, setActiveTab] = useState('All');
-  const [selectedOrder, setSelectedOrder] = useState<typeof orders[0] | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const tabs = ['All', 'Ongoing', 'Completed', 'Cancelled'];
+  
+  const { data: billingResponse, isLoading } = useGetAllMyProductQuery(undefined);
+  
+  const mappedOrders = useMemo(() => {
+    if (!billingResponse?.data) return [];
+    
+    // The API returns a flat list of billing items. 
+    // For now we map each item as a separate "order" entry
+    return billingResponse.data.map((item: any) => ({
+      id: item.productId.slice(-8).toUpperCase(),
+      date: 'Recent', // Date not in item response
+      status: 'Delivered', // Assuming delivered for successful billing
+      total: item.price * item.quantity,
+      subtotal: item.price * item.quantity,
+      shipping: 0,
+      paymentMethod: 'Paid',
+      address: 'N/A',
+      items: [
+        {
+          name: item.name,
+          image: item.image ? (item.image.startsWith('http') ? item.image : imageBaseURL + item.image) : "/images/placeholder.jpg",
+          price: item.price,
+          qty: item.quantity
+        }
+      ]
+    }));
+  }, [billingResponse]);
 
-  const filteredOrders = orders.filter(order => {
+  const filteredOrders = mappedOrders.filter((order: any) => {
     if (activeTab === 'All') return true;
     if (activeTab === 'Ongoing') return order.status === 'Processing' || order.status === 'Shipped';
-    return order.status === activeTab;
+    return order.status === activeTab || (activeTab === 'Completed' && order.status === 'Delivered');
   });
+
+  if (isLoading) {
+    return (
+      <div className="min-h-[400px] flex items-center justify-center">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -147,8 +131,8 @@ export default function MyOrdersPage() {
       <Dialog>
         <div className="space-y-6">
           {filteredOrders.length > 0 ? (
-            filteredOrders.map((order) => {
-              const StatusIcon = statusIcons[order.status as keyof typeof statusIcons];
+            filteredOrders.map((order: any) => {
+              const StatusIcon = statusIcons[order.status as keyof typeof statusIcons] || Package;
               return (
                 <div
                   key={order.id}
@@ -173,7 +157,7 @@ export default function MyOrdersPage() {
                       </div>
                       <div className="space-y-1">
                         <p className="text-xs font-medium text-gray-400 uppercase tracking-wider">Estimated Total</p>
-                        <h4 className="font-medium text-primary text-lg">${order.total.toFixed(2)}</h4>
+                        <h4 className="font-medium text-primary text-lg">€{order.total.toFixed(2)}</h4>
                       </div>
                     </div>
 
@@ -196,14 +180,14 @@ export default function MyOrdersPage() {
 
                   <div className="pt-8">
                     <div className="flex flex-wrap items-center gap-6">
-                      {order.items.slice(0, 3).map((item, id) => (
+                      {order.items.slice(0, 3).map((item: any, id: number) => (
                         <div key={id} className="flex items-center gap-4 bg-gray-50/50 p-3 rounded-2xl pr-6 border border-transparent hover:border-gray-100 transition-all">
                           <div className="relative w-16 h-16 rounded-xl overflow-hidden bg-white border border-gray-50 flex-shrink-0">
                             <Image src={item.image} alt={item.name} fill className="object-cover" />
                           </div>
                           <div className="space-y-0.5">
                             <h5 className="text-sm font-medium text-gray-900 line-clamp-1 max-w-[150px]">{item.name}</h5>
-                            <p className="text-xs font-medium text-gray-400">Qty: {item.qty} &bull; ${item.price.toFixed(2)}</p>
+                            <p className="text-xs font-medium text-gray-400">Qty: {item.qty} &bull; €{item.price.toFixed(2)}</p>
                           </div>
                         </div>
                       ))}
@@ -269,7 +253,7 @@ export default function MyOrdersPage() {
                   <Package size={14} /> Items List
                 </h5>
                 <div className="space-y-3">
-                  {selectedOrder.items.map((item, idx) => (
+                  {selectedOrder.items.map((item: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100/50 group hover:border-primary/20 transition-all">
                       <div className="flex items-center gap-4">
                         <div className="relative w-14 h-14 rounded-xl overflow-hidden bg-white border border-white">
@@ -289,15 +273,15 @@ export default function MyOrdersPage() {
               <div className="space-y-4 pt-4 border-t border-gray-100">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-400">Subtotal</span>
-                  <span className="font-medium">${selectedOrder.subtotal.toFixed(2)}</span>
+                  <span className="font-medium">€{selectedOrder.subtotal.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium text-gray-400">Shipping</span>
-                  <span className="font-medium">${selectedOrder.shipping.toFixed(2)}</span>
+                  <span className="font-medium">€{selectedOrder.shipping.toFixed(2)}</span>
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-100">
                   <span className="text-lg font-black tracking-tight">Total Amount</span>
-                  <span className="text-2xl font-black tracking-tight text-primary">${selectedOrder.total.toFixed(2)}</span>
+                  <span className="text-2xl font-black tracking-tight text-primary">€{selectedOrder.total.toFixed(2)}</span>
                 </div>
               </div>
             </div>
